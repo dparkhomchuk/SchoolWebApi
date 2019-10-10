@@ -1,0 +1,22 @@
+<ol>
+
+      <mat-form-field>
+        <input matInput  placeholder="Student Name" required [formControl]="name" >
+        <mat-error *ngIf="name.invalid">{{getErrorMessage(surname)}}</mat-error>
+
+      </mat-form-field>
+      <mat-form-field>
+          <input matInput  placeholder="Student Surname"  [formControl]="surname" required >
+          <mat-error *ngIf="surname.invalid">{{getErrorMessage(surname)}}</mat-error>
+
+        </mat-form-field>
+        <mat-form-field>
+            <input type="number" matInput  placeholder="Student Age"  [formControl]="age" required >
+            <mat-error *ngIf="age.invalid">{{getErrorMessage(age)}}</mat-error>
+          </mat-form-field>
+
+
+      <button mat-raised-button (click)="saveStudent(name.value,surname.value,age.value)" [disabled]="age.invalid||surname.invalid||name.invalid">Save</button>
+
+
+  </ol>
