@@ -31,7 +31,7 @@ namespace School.Web
         {
             services.AddDbContext<SchoolDataBase>(option =>
             {
-                option.UseInMemoryDatabase(Configuration.GetSection("ConnectionString").Value);
+                option.UseSqlServer(Configuration.GetSection("ConnectionString").Value);
                 //option.UseSqlServer(configuration.GetSection("ConnectionString").Value);
                 option.UseLazyLoadingProxies();
             });
