@@ -23,9 +23,8 @@ namespace School.Controllers
         }
 
         [HttpPost("group")]
-        public async Task<ActionResult> Add(GroupModel groupModel)
+        public async Task<ActionResult> Add(GroupDTO groupDTO)
         {
-            GroupDTO groupDTO = _mapper.Map<GroupDTO>(groupModel);
             await _groupService.Create(groupDTO);
             return Ok();
         }

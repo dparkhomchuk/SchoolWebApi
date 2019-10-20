@@ -6,12 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 using School.Database;
 using School.Database.UnitOfWork;
 using School.Interface;
 using School.Service;
 using School.UnitOfWork;
-using Swashbuckle.AspNetCore.Swagger;
 
 //using Microsoft.OpenApi.Models;
 
@@ -31,8 +31,7 @@ namespace School.Web
         {
             services.AddDbContext<SchoolDataBase>(option =>
             {
-                option.UseSqlServer(Configuration.GetSection("ConnectionString").Value);
-                //option.UseSqlServer(configuration.GetSection("ConnectionString").Value);
+                option.UseMySQL(Configuration.GetSection("ConnectionString").Value);
                 option.UseLazyLoadingProxies();
             });
 
@@ -48,7 +47,7 @@ namespace School.Web
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new Info(){Title = "School API",Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo(){Title = "School API",Version = "v1" });
             });
 
             services.AddCors(options =>
@@ -57,10 +56,12 @@ namespace School.Web
                     builder => builder.AllowAnyOrigin()
                         .AllowAnyMethod()
                         .AllowAnyHeader()
-                        .AllowCredentials()
+                        //.AllowCredentials()
                 );
             });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc((options) => options.EnableEndpointRouting = false);
+            services.AddHealthChecks();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -84,8 +85,6 @@ namespace School.Web
                         context.Response.Body.Write(bytes);
                     });
                 });
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
             }
 
             app.UseSwagger();
@@ -96,9 +95,9 @@ namespace School.Web
             });
 
             //app.UseCors(opt => opt.AllowAnyOrigin());
-            app.UseHttpsRedirection();
             app.UseMvc();
             app.UseCors("CorsPolicy");
+            app.UseHealthChecks("/health");
         }
     }
 }

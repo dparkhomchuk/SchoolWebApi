@@ -1,22 +1,20 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
+﻿FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
-WORKDIR /src
-COPY ["School.Web/School.Web.csproj", "School.Web/"]
-COPY ["School/School.csproj", "School/"]
-COPY ["School.Database/School.Database.csproj", "School.Database/"]
-RUN dotnet restore "School.Web/School.Web.csproj"
-COPY . .
-WORKDIR "/src/School.Web"
-RUN dotnet build "School.Web.csproj" -c Release -o /app/build
+# copy csproj and restore as distinct layers
+COPY *.sln .
+COPY School.Web/School.Web.csproj ./School.Web
+COPY School/School.csproj ./School
+COPY School.Database/School.Database.csproj ./School.Database
+RUN dotnet restore
 
-FROM build AS publish
-RUN dotnet publish "School.Web.csproj" -c Release -o /app/publish
+# copy everything else and build app
+COPY School.Web/. ./School.Web/
+WORKDIR /app/School.Web
+RUN dotnet publish -c Release -o out
 
-FROM base AS final
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/School.Web/out ./
 ENTRYPOINT ["dotnet", "School.Web.dll"]
