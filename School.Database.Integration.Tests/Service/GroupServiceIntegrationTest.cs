@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NUnit.Framework;
 using School.Database.UnitOfWork;
 using School.Entity;
+using School.Event;
 using School.Exceptions;
 using School.Interface;
 using School.Service;
@@ -56,7 +57,7 @@ namespace School.Database.Integration.Tests.Service
             context.SaveChanges();
 
             EFUnitOfWork unit = new EFUnitOfWork(context);
-            groupService = new GroupService(unit, mapper);
+            groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
 
         }
         [Test]

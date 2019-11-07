@@ -3,6 +3,7 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using School.Entity;
+using School.Event;
 using School.Interface;
 using School.Repository;
 using School.Service;
@@ -62,7 +63,7 @@ namespace School.UnitTests.Service
         public async Task GetGroup_ById()
         {
             //Arrenge
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
             int id = 2;
 
             //Act
@@ -76,7 +77,7 @@ namespace School.UnitTests.Service
         public async Task GetAllGroups()
         {
             //Arrenge
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
 
             //Act
             IEnumerable<GroupDTO> groupsDTO = await groupService.GetAll();
@@ -89,7 +90,7 @@ namespace School.UnitTests.Service
         public async Task AssignStudentToGroup()
         {
             //Arrenge
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
             int groupId = 1;
             int studentId = 1;
             //Act
@@ -103,7 +104,7 @@ namespace School.UnitTests.Service
         public async Task KickStudent_From_Group()
         {
             //Arrenge
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
             int groupId = 1;
             int studentId = 1;
             await groupService.AssignStudentToGroup(studentId, groupId);
@@ -119,7 +120,7 @@ namespace School.UnitTests.Service
         public async Task GetStudentsByGroup()
         {
             //Arrenge
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
             int groupId = 1;
             await groupService.AssignStudentToGroup(1, groupId);
             await groupService.AssignStudentToGroup(2, groupId);
@@ -144,7 +145,7 @@ namespace School.UnitTests.Service
             int studentId1 = 1;
             int studentId2 = 2;
             int groupId = 1;
-            GroupService groupService = new GroupService(unit, mapper);
+            GroupService groupService = new GroupService(unit, mapper, NSubstitute.Substitute.For<IEventPublisher>());
             await groupService.AssignStudentToGroup(studentId1, groupId);
             await groupService.AssignStudentToGroup(studentId2, groupId);
 

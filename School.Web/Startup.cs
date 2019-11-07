@@ -12,11 +12,47 @@ using School.Database.UnitOfWork;
 using School.Interface;
 using School.Service;
 using School.UnitOfWork;
+using School.Rabbit;
+using System;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Castle.Core.Logging;
+using RabbitMQ.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Internal;
 
 //using Microsoft.OpenApi.Models;
 
 namespace School.Web
 {
+    public class AutoLogAttribute : TypeFilterAttribute
+    {
+        public AutoLogAttribute() : base(typeof(AutoLogActionFilterImpl))
+        {
+
+        }
+
+        private class AutoLogActionFilterImpl : IActionFilter
+        {
+            private readonly ILogger _logger;
+            public AutoLogActionFilterImpl(ILoggerFactory loggerFactory)
+            {
+                _logger = loggerFactory.Create(typeof(AutoLogAttribute));
+            }
+
+            public void OnActionExecuting(ActionExecutingContext context)
+            {
+                // perform some business logic work
+            }
+
+            public void OnActionExecuted(ActionExecutedContext context)
+            {
+                //TODO: log body content and response as well
+                _logger.Info($"path: {context.HttpContext.Request.Path}");
+            }
+        }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -39,8 +75,7 @@ namespace School.Web
 
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IStudentService, StudentService>();
-
-
+            services.AddRabbitPublisher(Configuration.GetValue<Uri>("RabbitURI"), Configuration.GetValue<string>("ExchangeName"));
             IMapper mapper = Mapping.GetMapper();
             services.AddSingleton(mapper);
 
@@ -59,9 +94,17 @@ namespace School.Web
                         //.AllowCredentials()
                 );
             });
-            //services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddMvc((options) => options.EnableEndpointRouting = false);
-            services.AddHealthChecks();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+           /* services.AddMvc((options) => {
+                options.EnableEndpointRouting = false;
+                options.Filters.Add(new AutoLogAttribute());
+            });*/
+            services.AddHealthChecks()
+                .AddRabbitMQ(rabbitMQConnectionString: Configuration.GetSection("RabbitURI").Value,
+                tags: new List<string> { "ready" })
+                .AddMySql(connectionString: Configuration.GetSection("ConnectionString").Value,
+                tags: new List<string> { "ready" });
+           // services.AddHealthChecksUI();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -97,7 +140,28 @@ namespace School.Web
             //app.UseCors(opt => opt.AllowAnyOrigin());
             app.UseMvc();
             app.UseCors("CorsPolicy");
-            app.UseHealthChecks("/health");
+            app.UseHealthChecks("/health/ready", new HealthCheckOptions()
+            {
+                Predicate = (check) => check.Tags.Contains("ready"),
+            });
+            app.UseHealthChecksUI();
+            app.UseHealthChecks("/health/live", new HealthCheckOptions()
+            {
+                Predicate = (_) => false
+            });
+          /*  app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions()
+                {
+                    Predicate = (check) => check.Tags.Contains("ready"),
+                });
+
+                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions()
+                {
+                    Predicate = (_) => false
+                });
+
+            }*/
         }
     }
 }

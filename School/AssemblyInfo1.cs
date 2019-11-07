@@ -32,3 +32,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("School.UnitTest")]
 [assembly: InternalsVisibleTo("School.Database.Integration.Tests")]
+[assembly: InternalsVisibleTo("School.Rabbit")]

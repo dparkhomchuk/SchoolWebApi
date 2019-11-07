@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: school.web
-  tag: latest
+  repository: school
+  tag: test
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

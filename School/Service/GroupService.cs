@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using School.Entity;
+using School.Event;
 using School.Interface;
+using System.Linq;
 using School.UnitOfWork;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,10 +13,12 @@ namespace School.Service
     {
         IUnitOfWork _unit;
         IMapper _mapper;
-        public GroupService(IUnitOfWork unit, IMapper mapper)
+        readonly IEventPublisher _eventPublisher;
+        public GroupService(IUnitOfWork unit, IMapper mapper, IEventPublisher eventPublisher)
         {
             _unit = unit;
             _mapper = mapper;
+            _eventPublisher = eventPublisher;
         }
         public async Task Create(GroupDTO groupDTO)
         {
@@ -37,10 +41,9 @@ namespace School.Service
         {
             Group group = await _unit.GroupRepository.Get(groupId);
             Student student = await _unit.StudentRepository.Get(studentId);
-
             group.AddStudentToGroup(student);
-
             await _unit.Save();
+            group.DomainEvents.ForEach(domainEvent => _eventPublisher.Publish(domainEvent));
         }
         public async Task<IEnumerable<GroupDTO>> GetAll()
         {
